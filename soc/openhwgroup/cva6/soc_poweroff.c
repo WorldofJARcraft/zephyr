@@ -4,7 +4,7 @@
  * Copyright(c) 2024, CISPA Helmholtz Center for Information Security
  * SPDX - License - Identifier : Apache-2.0
  */
-#include "cv64a6.h"
+#include "cva6.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -25,7 +25,7 @@ volatile int32_t tohost;
 
 static int32_t cv64a6_test_status;
 
-void z_cv64a6_finish_test(const int32_t status)
+void z_cva6_finish_test(const int32_t status)
 {
 	cv64a6_test_status = status;
 

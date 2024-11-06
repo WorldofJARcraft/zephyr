@@ -3,6 +3,8 @@
 
 #include "cva6.dtsi"
 
+// minimal configuration of CVA6 32-bit CPUs: no instruction set extensions,
+// no MMU, no PMP
 / {
 	cpus_0: cpus {
 		timebase-frequency = <25000000>;
@@ -12,9 +14,7 @@
 			device_type = "cpu";
 			status = "okay";
 			compatible = "riscv";
-			riscv,isa = "rv64imafdc";
-			mmu-type = "riscv,sv39";
-			tlb-split;
+			riscv,isa = "rv32ima";
 
 			status="okay";
 

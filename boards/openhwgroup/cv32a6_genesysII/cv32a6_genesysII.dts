@@ -5,11 +5,11 @@
  */
 /dts-v1/;
 
-#include <openhwgroup/cv64a6.dtsi>
+#include <openhwgroup/cv32a6.dtsi>
 
 / {
-	model = "Openhardwaregroup CV64A6 on Genesys II";
-	compatible = "ariane,cv64a6_genesysII";
+	model = "Openhardwaregroup CV32A6 on Genesys II";
+	compatible = "ariane,cv32a6_genesysII";
 
 	chosen {
 		zephyr,console = &uart0;

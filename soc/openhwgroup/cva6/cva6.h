@@ -6,11 +6,11 @@
  */
 #pragma once
 
-#ifndef CV64A6_H
-#define CV64A6_H
+#ifndef CVA6_H
+#define CVA6_H
 
 #include <stdint.h>
 
-void z_cv64a6_finish_test(const int32_t status);
+void z_cva6_finish_test(const int32_t status);
 
 #endif
