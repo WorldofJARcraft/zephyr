@@ -30,14 +30,6 @@
 	status = "okay";
 };
 
-&rom {
-	status = "okay";
-};
-
-&gpio {
-	status = "okay";
-};
-
 &dma0 {
 	status = "okay";
 };
