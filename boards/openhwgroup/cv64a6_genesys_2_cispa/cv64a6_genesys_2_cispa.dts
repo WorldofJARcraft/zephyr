@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 2024 CISPA Helmholtz Center for Information Security gGmbH
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/dts-v1/;
+
+#include <openhwgroup/cv64a6.dtsi>
+
+/ {
+	model = "Openhardwaregroup CV64A6 on Genesys 2";
+	compatible = "ariane,cv64a6_genesys_2";
+
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &uart0;
+		zephyr,sram = &memory0;
+	};
+};
+
+&uart0 {
+	status = "okay";
+};
+
+&spi0 {
+	status = "okay";
+};
+
+&clint{
+	status = "okay";
+};
+
+&dma0 {
+	status = "okay";
+};
+
+&eth {
+	status = "disabled";
+};
+
+&xlnx_gpio {
+	status = "okay";
+};
+
+&{/soc} {
+	/*
+     * Only on CISPA fork of the project.
+     */
+	axi-ethernet-subsystem@40c00000 {
+
+	    reg = <0x40c00000 0x40000>;
+	    compatible = "xlnx,axi-ethernet-subsystem-1.00.a";
+
+	    eth0: ethernet-mac{
+			axistream-connected = <&dma0>;
+			axistream-control-connected = <&dma0>;
+			clock-frequency = <50000000>;
+			compatible = "xlnx,axi-ethernet-1.00.a";
+			device_type = "network";
+			local-mac-address = [00 0a 35 00 00 00];
+
+			// full checksum offloading
+			xlnx,rxcsum = <0x2>;
+			xlnx,txcsum = <0x2>;
+
+			interrupt-parent = <&plic>;
+			interrupts = <13 4>;
+
+			status="okay";
+			phy-handle=<&phy0>;
+	    };
+
+	    mdio0: mdio {
+			compatible = "xlnx,axi-ethernet-1.00.a-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			clock-frequency = <50000000>;
+
+			phy0: phy@1 {
+				#address-cells = <1>;
+				#size-cells = <0>;
+				compatible = "ethernet-phy";
+				reg = <1 1>;
+				status="okay";
+			};
+
+			status="okay";
+	    };
+
+		status="okay";
+
+	};
+};

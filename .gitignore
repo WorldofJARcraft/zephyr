@@ -92,3 +92,7 @@ ModulesMaintainers.txt
 Nits.txt
 Pylint.txt
 YAMLLint.txt
+modules
+bootloader
+tools
+zephyr-sdk-*
