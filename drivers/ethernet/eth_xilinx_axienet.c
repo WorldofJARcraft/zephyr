@@ -570,7 +570,7 @@ static int xilinx_axienet_probe(const struct device *dev)
 
 	xilinx_axienet_set_mac_address(config, data);
 
-	for(int i = 0; i < CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX; i++){
+	for(int i = 0; i < CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX - 1; i++){
 		setup_dma_rx_transfer(dev, config, data);
 	}
 
