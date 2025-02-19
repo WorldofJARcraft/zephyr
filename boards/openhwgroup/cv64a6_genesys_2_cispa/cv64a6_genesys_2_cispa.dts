@@ -47,6 +47,7 @@
      * Only on CISPA fork of the project.
      */
 	axi-ethernet-subsystem@40c00000 {
+		#interrupt-cells = <2>;
 
 	    reg = <0x40c00000 0x40000>;
 	    compatible = "xlnx,axi-ethernet-subsystem-1.00.a";

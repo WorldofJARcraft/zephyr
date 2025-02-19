@@ -53,6 +53,7 @@
 
 		/* USB UART */
 		uart0:serial@10000000 {
+			#interrupt-cells = <2>;
 			clock-frequency = <50000000>;
 			clocks = <&clk_bus>;
 			compatible = "ns16550";
@@ -64,12 +65,13 @@
 			stop-bits = "1";
 			data-bits = <8>;
 			interrupt-parent = <&plic>;
-			interrupts = <1 0x04>;
+			interrupts = <11 0x04>;
 			status="okay";
 		};
 
 		/* SPI controller, connected to SD card */
 		spi0: axi_quad_spi@20000000 {
+			#interrupt-cells = <2>;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "xlnx,xps-spi-2.00.a";
@@ -111,7 +113,7 @@
 			interrupt-parent = <&plic>;
 			// TX - RX
 			// active-high level-triggered
-			interrupts = <8 4>, <9 4>;
+			interrupts = <8 9>, <9 4>;
 			// TX and RX
 			dma-channels = <2>;
 			status="disabled";

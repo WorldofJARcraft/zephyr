@@ -350,13 +350,20 @@ class OpenOcdBinaryRunner(ZephyrBinaryRunner):
             rtos_command = '${} configure -rtos Zephyr'.format(self.target_handle)
             pre_init_cmd.append(rtos_command)
 
+        halt_arg = self.halt_arg
+
+        if command == 'debug':
+            # also reset the system
+            halt_arg = ['-c reset halt']
+
+
         server_cmd = (self.openocd_cmd + self.serial +
                       ['-c', 'tcl_port {}'.format(self.tcl_port),
                        '-c', 'telnet_port {}'.format(self.telnet_port),
                        '-c', 'gdb_port {}'.format(self.gdb_port)] +
                       self.cfg_cmd +
                       pre_init_cmd + self.init_arg + self.targets_arg +
-                      self.halt_arg)
+                      halt_arg)
         gdb_cmd = (self.gdb_cmd + self.tui_arg +
                    ['-ex', 'target extended-remote :{}'.format(self.gdb_client_port),
                     self.elf_name])
