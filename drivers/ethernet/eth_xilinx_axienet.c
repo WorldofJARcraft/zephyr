@@ -114,8 +114,8 @@ static void xilinx_axienet_rx_callback(const struct device *dma, void *user_data
 	unsigned int packet_size;
 	struct net_pkt *pkt;
 
-	size_t next_descriptor = (data->rx_completed_buffer_index + 1) %
-				    CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX;
+	size_t next_descriptor =
+		(data->rx_completed_buffer_index + 1) % CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX;
 	size_t current_descriptor = data->rx_completed_buffer_index;
 
 	if (status < 0) {
@@ -159,8 +159,8 @@ static void xilinx_axienet_tx_callback(const struct device *dev, void *user_data
 {
 	struct device *ethdev = (struct device *)user_data;
 	struct xilinx_axienet_data *data = ethdev->data;
-	size_t next_descriptor = (data->tx_completed_buffer_index + 1) %
-				    CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_TX;
+	size_t next_descriptor =
+		(data->tx_completed_buffer_index + 1) % CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_TX;
 
 	data->tx_completed_buffer_index = next_descriptor;
 
@@ -175,15 +175,14 @@ static int setup_dma_rx_transfer(const struct device *dev,
 				 struct xilinx_axienet_data *data)
 {
 	int err;
-	size_t next_descriptor = (data->rx_populated_buffer_index + 1) %
-				    CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX;
+	size_t next_descriptor =
+		(data->rx_populated_buffer_index + 1) % CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX;
 	size_t current_descriptor = data->rx_populated_buffer_index;
 
-	if(next_descriptor == data->rx_completed_buffer_index){
+	if (next_descriptor == data->rx_completed_buffer_index) {
 		LOG_ERR("Cannot start RX via DMA - populated buffer %zu will run into completed"
 			" buffer %zu!",
-			data->rx_populated_buffer_index,
-			data->rx_completed_buffer_index);
+			data->rx_populated_buffer_index, data->rx_completed_buffer_index);
 		return -ENOSPC;
 	}
 
@@ -194,19 +193,15 @@ static int setup_dma_rx_transfer(const struct device *dev,
 			.block_size = sizeof(data->rx_buffer[current_descriptor].buffer),
 			.next_block = NULL,
 			.source_addr_adj = DMA_ADDR_ADJ_INCREMENT,
-			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT
-		};
-		struct dma_config dma_conf = {
-			.dma_slot = 0,
-			.channel_direction = PERIPHERAL_TO_MEMORY,
-			.complete_callback_en = 1,
-			.error_callback_dis = 0,
-			.block_count = 1,
-			.head_block = &head_block,
-			.user_data = (void *)dev,
-			.dma_callback = xilinx_axienet_rx_callback
-		};
-
+			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT};
+		struct dma_config dma_conf = {.dma_slot = 0,
+					      .channel_direction = PERIPHERAL_TO_MEMORY,
+					      .complete_callback_en = 1,
+					      .error_callback_dis = 0,
+					      .block_count = 1,
+					      .head_block = &head_block,
+					      .user_data = (void *)dev,
+					      .dma_callback = xilinx_axienet_rx_callback};
 
 		if (config->have_rx_csum_offload) {
 			dma_conf.linked_channel = XILINX_AXI_DMA_LINKED_CHANNEL_FULL_CSUM_OFFLOAD;
@@ -238,7 +233,7 @@ static int setup_dma_rx_transfer(const struct device *dev,
 
 	err = dma_start(config->dma, XILINX_AXI_DMA_RX_CHANNEL_NUM);
 
-	if(err){
+	if (err) {
 		/* buffer has not been accepted by DMA */
 		data->rx_populated_buffer_index = current_descriptor;
 	}
@@ -252,15 +247,14 @@ static int setup_dma_tx_transfer(const struct device *dev,
 				 struct xilinx_axienet_data *data, uint32_t buffer_len)
 {
 	int err;
-	size_t next_descriptor = (data->tx_populated_buffer_index + 1) %
-				    CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_TX;
+	size_t next_descriptor =
+		(data->tx_populated_buffer_index + 1) % CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_TX;
 	size_t current_descriptor = data->tx_populated_buffer_index;
 
-	if(next_descriptor == data->tx_completed_buffer_index){
+	if (next_descriptor == data->tx_completed_buffer_index) {
 		LOG_ERR("Cannot start TX via DMA - populated buffer %zu will run into completed"
 			" buffer %zu!",
-			data->tx_populated_buffer_index,
-			data->tx_completed_buffer_index);
+			data->tx_populated_buffer_index, data->tx_completed_buffer_index);
 		return -ENOSPC;
 	}
 
@@ -271,18 +265,15 @@ static int setup_dma_tx_transfer(const struct device *dev,
 			.block_size = buffer_len,
 			.next_block = NULL,
 			.source_addr_adj = DMA_ADDR_ADJ_INCREMENT,
-			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT
-		};
-		struct dma_config dma_conf = {
-			.dma_slot = 0,
-			.channel_direction = MEMORY_TO_PERIPHERAL,
-			.complete_callback_en = 1,
-			.error_callback_dis = 0,
-			.block_count = 1,
-			.head_block = &head_block,
-			.user_data = (void *)dev,
-			.dma_callback = xilinx_axienet_tx_callback
-		};
+			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT};
+		struct dma_config dma_conf = {.dma_slot = 0,
+					      .channel_direction = MEMORY_TO_PERIPHERAL,
+					      .complete_callback_en = 1,
+					      .error_callback_dis = 0,
+					      .block_count = 1,
+					      .head_block = &head_block,
+					      .user_data = (void *)dev,
+					      .dma_callback = xilinx_axienet_tx_callback};
 
 		if (config->have_tx_csum_offload) {
 			dma_conf.linked_channel = XILINX_AXI_DMA_LINKED_CHANNEL_FULL_CSUM_OFFLOAD;
@@ -300,8 +291,8 @@ static int setup_dma_tx_transfer(const struct device *dev,
 	} else {
 		/* can use faster "reload" API, as everything else stays the same */
 		err = dma_reload(config->dma, XILINX_AXI_DMA_TX_CHANNEL_NUM,
-				 (uintptr_t)data->tx_buffer[current_descriptor].buffer,
-				 0x0, buffer_len);
+				 (uintptr_t)data->tx_buffer[current_descriptor].buffer, 0x0,
+				 buffer_len);
 		if (err) {
 			LOG_ERR("DMA reconfigure failed: %d", err);
 			return err;
@@ -313,7 +304,7 @@ static int setup_dma_tx_transfer(const struct device *dev,
 
 	err = dma_start(config->dma, XILINX_AXI_DMA_TX_CHANNEL_NUM);
 
-	if(err){
+	if (err) {
 		/* buffer has not been accepted by DMA */
 		data->tx_populated_buffer_index = current_descriptor;
 	}
@@ -564,7 +555,7 @@ static int xilinx_axienet_probe(const struct device *dev)
 
 	xilinx_axienet_set_mac_address(config, data);
 
-	for(int i = 0; i < CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX - 1; i++){
+	for (int i = 0; i < CONFIG_ETH_XILINX_AXIENET_BUFFER_NUM_RX - 1; i++) {
 		setup_dma_rx_transfer(dev, config, data);
 	}
 
@@ -602,7 +593,7 @@ static const struct ethernet_api xilinx_axienet_api = {
 	static void xilinx_axienet_config_##inst(const struct xilinx_axienet_data *dev)            \
 	{                                                                                          \
 		COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, interrupts), (SETUP_IRQS(inst)),           \
-			    (LOG_INF("No IRQs defined!")));        \
+			    (LOG_INF("No IRQs defined!")));                                        \
 	}                                                                                          \
                                                                                                    \
 	static struct xilinx_axienet_data data_##inst = {                                          \
@@ -613,7 +604,7 @@ static const struct ethernet_api xilinx_axienet_api = {
 		.config_func = xilinx_axienet_config_##inst,                                       \
 		.dma = DEVICE_DT_GET(DT_INST_PHANDLE(inst, axistream_connected)),                  \
 		.phy = DEVICE_DT_GET(DT_INST_PHANDLE(inst, phy_handle)),                           \
-		.reg = DT_REG_ADDR(DT_INST_PARENT(inst)),                       	   	   \
+		.reg = DT_REG_ADDR(DT_INST_PARENT(inst)),                                          \
 		.have_irq = DT_INST_NODE_HAS_PROP(inst, interrupts),                               \
 		.have_tx_csum_offload = DT_INST_PROP_OR(inst, xlnx_txcsum, 0x0) == 0x2,            \
 		.have_rx_csum_offload = DT_INST_PROP_OR(inst, xlnx_rxcsum, 0x0) == 0x2,            \
