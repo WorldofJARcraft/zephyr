@@ -85,28 +85,21 @@ struct xilinx_axienet_config {
 
 	const struct device *phy;
 
-	void *reg;
+	mem_addr_t reg;
 
 	bool have_irq, have_rx_csum_offload, have_tx_csum_offload;
 };
 
 static void xilinx_axienet_write_register(const struct xilinx_axienet_config *config,
-					  uintptr_t reg_offset, uint32_t value)
+					  mem_addr_t reg_offset, uint32_t value)
 {
-	volatile uint32_t *reg_addr = (uint32_t *)((uint8_t *)(config->reg) + reg_offset);
-
-	*reg_addr = value;
-	barrier_dmem_fence_full(); /* make sure that write commits */
+	sys_write32(value, config->reg + reg_offset);
 }
 
 static uint32_t xilinx_axienet_read_register(const struct xilinx_axienet_config *config,
-					     uintptr_t reg_offset)
+					     mem_addr_t reg_offset)
 {
-	const volatile uint32_t *reg_addr = (uint32_t *)((uint8_t *)(config->reg) + reg_offset);
-	const uint32_t ret = *reg_addr;
-
-	barrier_dmem_fence_full(); /* make sure that read commits */
-	return ret;
+	return sys_read32(config->reg + reg_offset);
 }
 static int setup_dma_rx_transfer(const struct device *dev,
 				 const struct xilinx_axienet_config *config,
@@ -195,24 +188,25 @@ static int setup_dma_rx_transfer(const struct device *dev,
 	}
 
 	if (!data->dma_is_configured_rx) {
-		static struct dma_block_config head_block = {0};
-		static struct dma_config dma_conf = {0};
+		struct dma_block_config head_block = {
+			.source_address = 0x0,
+			.dest_address = (uintptr_t)data->rx_buffer[current_descriptor].buffer,
+			.block_size = sizeof(data->rx_buffer[current_descriptor].buffer),
+			.next_block = NULL,
+			.source_addr_adj = DMA_ADDR_ADJ_INCREMENT,
+			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT
+		};
+		struct dma_config dma_conf = {
+			.dma_slot = 0,
+			.channel_direction = PERIPHERAL_TO_MEMORY,
+			.complete_callback_en = 1,
+			.error_callback_dis = 0,
+			.block_count = 1,
+			.head_block = &head_block,
+			.user_data = (void *)dev,
+			.dma_callback = xilinx_axienet_rx_callback
+		};
 
-		head_block.source_address = 0x0;
-		head_block.dest_address = (uintptr_t)data->rx_buffer[current_descriptor].buffer;
-		head_block.block_size = sizeof(data->rx_buffer[current_descriptor].buffer);
-		head_block.next_block = NULL;
-		head_block.source_addr_adj = DMA_ADDR_ADJ_INCREMENT;
-		head_block.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT;
-
-		dma_conf.dma_slot = 0;
-		dma_conf.channel_direction = PERIPHERAL_TO_MEMORY;
-		dma_conf.complete_callback_en = 1;
-		dma_conf.error_callback_dis = 0;
-		dma_conf.block_count = 1;
-		dma_conf.head_block = &head_block;
-		dma_conf.user_data = (void *)dev;
-		dma_conf.dma_callback = xilinx_axienet_rx_callback;
 
 		if (config->have_rx_csum_offload) {
 			dma_conf.linked_channel = XILINX_AXI_DMA_LINKED_CHANNEL_FULL_CSUM_OFFLOAD;
@@ -271,24 +265,24 @@ static int setup_dma_tx_transfer(const struct device *dev,
 	}
 
 	if (!data->dma_is_configured_tx) {
-		static struct dma_block_config head_block;
-		static struct dma_config dma_conf;
-
-		head_block.source_address = (uintptr_t)data->tx_buffer[current_descriptor].buffer;
-		head_block.dest_address = 0x0;
-		head_block.block_size = buffer_len;
-		head_block.next_block = NULL;
-		head_block.source_addr_adj = DMA_ADDR_ADJ_INCREMENT;
-		head_block.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT;
-
-		dma_conf.dma_slot = 0;
-		dma_conf.channel_direction = MEMORY_TO_PERIPHERAL;
-		dma_conf.complete_callback_en = 1;
-		dma_conf.error_callback_dis = 0;
-		dma_conf.block_count = 1;
-		dma_conf.head_block = &head_block;
-		dma_conf.user_data = (void *)dev;
-		dma_conf.dma_callback = xilinx_axienet_tx_callback;
+		struct dma_block_config head_block = {
+			.source_address = (uintptr_t)data->tx_buffer[current_descriptor].buffer,
+			.dest_address = 0x0,
+			.block_size = buffer_len,
+			.next_block = NULL,
+			.source_addr_adj = DMA_ADDR_ADJ_INCREMENT,
+			.dest_addr_adj = DMA_ADDR_ADJ_INCREMENT
+		};
+		struct dma_config dma_conf = {
+			.dma_slot = 0,
+			.channel_direction = MEMORY_TO_PERIPHERAL,
+			.complete_callback_en = 1,
+			.error_callback_dis = 0,
+			.block_count = 1,
+			.head_block = &head_block,
+			.user_data = (void *)dev,
+			.dma_callback = xilinx_axienet_tx_callback
+		};
 
 		if (config->have_tx_csum_offload) {
 			dma_conf.linked_channel = XILINX_AXI_DMA_LINKED_CHANNEL_FULL_CSUM_OFFLOAD;
@@ -619,7 +613,7 @@ static const struct ethernet_api xilinx_axienet_api = {
 		.config_func = xilinx_axienet_config_##inst,                                       \
 		.dma = DEVICE_DT_GET(DT_INST_PHANDLE(inst, axistream_connected)),                  \
 		.phy = DEVICE_DT_GET(DT_INST_PHANDLE(inst, phy_handle)),                           \
-		.reg = (void *)(uintptr_t)DT_REG_ADDR(DT_INST_PARENT(inst)),                       \
+		.reg = DT_REG_ADDR(DT_INST_PARENT(inst)),                       	   	   \
 		.have_irq = DT_INST_NODE_HAS_PROP(inst, interrupts),                               \
 		.have_tx_csum_offload = DT_INST_PROP_OR(inst, xlnx_txcsum, 0x0) == 0x2,            \
 		.have_rx_csum_offload = DT_INST_PROP_OR(inst, xlnx_rxcsum, 0x0) == 0x2,            \
